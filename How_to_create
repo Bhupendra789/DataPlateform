@@ -1,0 +1,579 @@
+Step 1 — Terraform Repository Structure: Need to create this structure in our repo:
+
+aidna-cdlh-infra (Repo Name)
+│
+├── modules
+│   ├── bronze
+│   ├── silver
+│   ├── gold
+│   ├── dataplex
+│   └── iam
+│
+├── environments
+│   └── dev
+│        main.tf
+│        variables.tf
+│        terraform.tfvars
+│        backend.tf
+
+**********************************Step 11 — Required APIs  -
+Required these APIs to be enabled in the respective projects.
+Run once:
+gcloud services enable \
+storage.googleapis.com \
+bigquery.googleapis.com \
+dataplex.googleapis.com \
+artifactregistry.googleapis.com \
+pubsub.googleapis.com \
+dataflow.googleapis.com \
+composer.googleapis.com \
+cloudresourcemanager.googleapis.com \
+serviceusage.googleapis.com \
+iam.googleapis.com \
+iamcredentials.googleapis.com \
+sts.googleapis.com
+
+===========================================================
+Architecture We Will Build, and we will create these projects using Terraform: 
+Inside folder: " fldr-cdlh-dev."
+
+prj-cdlh-dev-bronze-data
+prj-cdlh-dev-silver-data
+prj-cdlh-dev-gold-data
+prj-cdlh-dev-common-svcs
+prj-cdlh-dev-datamgmt
+prj-cdlh-dev-analytics
+prj-cdlh-dev-aiml
+prj-cdlh-dev-api
+=======================================================
+Hierarchy:
+
+Organization
+   │
+fldr-cdlh-dev
+   │
+   ├── prj-cdlh-dev-bronze-data
+   ├── prj-cdlh-dev-silver-data
+   ├── prj-cdlh-dev-gold-data
+   ├── prj-cdlh-dev-common-svcs
+   ├── prj-cdlh-dev-datamgmt
+   ├── prj-cdlh-dev-analytics
+   ├── prj-cdlh-dev-aiml
+   └── prj-cdlh-dev-api
+======================================================
+3️⃣ Terraform Repository Structure
+
+Create GitHub repo:
+
+aidna-cdlh-infra
+
+Structure:
+
+aidna-cdlh-infra
+│
+├── modules
+│     └── project
+│          main.tf
+│          variables.tf
+│
+├── environments
+│
+│   └── dev
+│        main.tf
+│        variables.tf
+│        terraform.tfvars
+│        backend.tf
+│
+└── .github
+    └── workflows
+         terraform.yml
+=========================================================================
+4️⃣ Terraform Backend (State)
+
+File:
+
+environments/dev/backend.tf
+
+terraform {
+  backend "gcs" {
+    bucket  = "cdlh-tf-state-dev"
+    prefix  = "terraform/projects"
+  }
+}
+============================================================
+Create bucket:
+gcloud storage buckets create gs://cdlh-tf-state-dev \
+--location=us-central1
+==================================================================
+5️⃣ Terraform Provider
+Create: provider.tf
+
+provider "google" {
+  project = var.bootstrap_project
+  region  = "us-central1"
+}
+===========================================================
+6️⃣ Project Module
+Create module:
+
+modules/project/main.tf
+
+resource "google_project" "project" {
+
+  name       = var.project_name
+  project_id = var.project_id
+
+  folder_id  = var.folder_id
+
+  billing_account = var.billing_account
+
+}
+==========================================================================
+variables.tf
+modules/project/variables.tf 
+
+variable "project_name" {}
+variable "project_id" {}
+variable "folder_id" {}
+variable "billing_account" {}
+========================================================================
+7️⃣ DEV Environment Variables
+environments/dev/variables.tf
+
+variable "folder_id" {}
+variable "billing_account" {}
+variable "bootstrap_project" {}
+=====================================================================
+8️⃣ terraform.tfvars
+folder_id = "123456789012"
+billing_account = "AAAAAA-BBBBBB-CCCCCC"
+
+bootstrap_project = "terraform-bootstrap"
+
+
+Replace:
+
+folder_id → fld-cdlh-dev
+billing_account → your billing ID
+======================================================================
+9️⃣ Create DEV Projects
+environments/dev/main.tf
+
+module "bronze_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev Bronze"
+  project_id   = "prj-cdlh-dev-bronze-data"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "silver_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev Silver"
+  project_id   = "prj-cdlh-dev-silver-data"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "gold_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev Gold"
+  project_id   = "prj-cdlh-dev-gold-data"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "common_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev Common Services"
+  project_id   = "prj-cdlh-dev-common-svcs"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "datamgmt_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev Data Management"
+  project_id   = "prj-cdlh-dev-datamgmt"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "analytics_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev Analytics"
+  project_id   = "prj-cdlh-dev-analytics"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "aiml_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev AI ML"
+  project_id   = "prj-cdlh-dev-aiml"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "api_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev API"
+  project_id   = "prj-cdlh-dev-api"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+============================================================================
+🔟 Deploy Terraform (Local Test)
+
+Run: cd environments/dev
+Initialize: terraform init
+Plan:  terraform plan
+Apply:  terraform apply
+#######Terraform will create all 8 projects.
+
+=========================================================================
+                       ANOTHER WAY TO CREATE A PROJECT (STEP BY STEP)
+Phase 1 — Collect Required Information
+Before writing Terraform, collect these from GCP Console.
+Go to
+IAM & Admin → Settings
+We need:
+Organization ID
+Billing Account ID
+Folder ID (fldr-cdlh-dev)
+Bootstrap Project ID
+
+
+Example (replace with your real values):
+
+Organization ID: 11053298652
+Billing Account: AAAA-BBBB-CCCC
+Folder ID: 123456789012
+Bootstrap Project: terraform-bootstrap
+Region: us-central1
+
+
+Why we need them:
+
+Value	Purpose
+Folder ID	place new projects in DEV folder
+Billing ID	attach billing
+Bootstrap Project	Terraform execution project
+====================================================================
+Phase 2 — Install Required Tools
+
+Install these on our machine.
+Terraform
+Check: terraform -version
+Install (Mac/Win/Linux): brew install terraform
+Linux: sudo apt install terraform
+Google Cloud CLI
+Check: gcloud version
+Install: curl https://sdk.cloud.google.com | bash
+=============================================================================
+Phase 3 — Authenticate to GCP
+
+Login: gcloud auth login
+Set project: gcloud config set project terraform-bootstrap
+Verify: gcloud config list
+-------------------------------------------------------------------
+Phase 4 — Enable Required APIs
+Run once:
+gcloud services enable \
+cloudresourcemanager.googleapis.com \
+serviceusage.googleapis.com \
+iam.googleapis.com \
+iamcredentials.googleapis.com \
+sts.googleapis.com
+These APIs allow Terraform to create projects.
+=========================================================================
+Phase 5 — Create Terraform State Bucket
+Terraform stores state remotely.
+Create bucket:
+gcloud storage buckets create gs://cdlh-tf-state-dev \
+--location=us-central1
+----------------------------------------
+Enable versioning:
+gsutil versioning set on gs://cdlh-tf-state-dev
+========================================================================================
+Phase 6 — Create Terraform Repository
+
+Create project folder.
+
+mkdir aidna-cdlh-infra
+cd aidna-cdlh-infra
+
+
+Create structure:
+
+aidna-cdlh-infra
+│
+├── modules
+│   └── project
+│        main.tf
+│        variables.tf
+│
+├── environments
+│   └── dev
+│        main.tf
+│        variables.tf
+│        terraform.tfvars
+│        backend.tf
+
+Phase 7 — Write Terraform Code
+1️⃣ Project Module
+
+Create:
+
+modules/project/main.tf
+
+resource "google_project" "project" {
+
+  name       = var.project_name
+  project_id = var.project_id
+
+  folder_id  = var.folder_id
+
+  billing_account = var.billing_account
+
+}
+
+variables.tf
+modules/project/variables.tf
+
+variable "project_name" {}
+variable "project_id" {}
+variable "folder_id" {}
+variable "billing_account" {}
+================================================================================
+Phase 8 — DEV Environment Code
+
+Create:
+
+environments/dev/backend.tf
+
+terraform {
+  backend "gcs" {
+    bucket  = "cdlh-tf-state-dev"
+    prefix  = "terraform/dev-projects"
+  }
+}
+
+variables.tf
+variable "folder_id" {}
+variable "billing_account" {}
+
+terraform.tfvars
+folder_id = "123456789012"
+billing_account = "AAAA-BBBB-CCCC"
+
+Replace with your values.
+===================================================================
+
+Phase 9 — Create DEV Projects
+
+Create:
+
+environments/dev/main.tf
+
+module "bronze_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev Bronze"
+  project_id   = "prj-cdlh-dev-bronze-data"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "silver_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev Silver"
+  project_id   = "prj-cdlh-dev-silver-data"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "gold_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev Gold"
+  project_id   = "prj-cdlh-dev-gold-data"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "common_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev Common"
+  project_id   = "prj-cdlh-dev-common-svcs"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "datamgmt_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev Data Management"
+  project_id   = "prj-cdlh-dev-datamgmt"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "analytics_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev Analytics"
+  project_id   = "prj-cdlh-dev-analytics"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "aiml_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev AIML"
+  project_id   = "prj-cdlh-dev-aiml"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+
+module "api_project" {
+
+  source = "../../modules/project"
+
+  project_name = "CDLH Dev API"
+  project_id   = "prj-cdlh-dev-api"
+
+  folder_id = var.folder_id
+  billing_account = var.billing_account
+
+}
+===============================================================
+Phase 10 — Run Terraform
+
+Go to dev folder.
+
+cd environments/dev
+
+Initialize Terraform.
+terraform init
+terraform plan
+
+We should see:
+
++ google_project.project
+
+Deploy.
+
+terraform apply
+==========================================================================
+Phase 11 — Push Code to GitHub
+
+Initialize git:
+
+git init
+git add .
+git commit -m "terraform project creation"
+
+
+Create GitHub repo and push.
+
+Phase 12 — GitHub Actions Pipeline
+
+Create file:
+
+.github/workflows/terraform.yml
+
+name: Terraform Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v3
+
+    - uses: hashicorp/setup-terraform@v2
+
+    - run: terraform init
+      working-directory: environments/dev
+
+    - run: terraform plan
+      working-directory: environments/dev
+
+    - run: terraform apply -auto-approve
+      working-directory: environments/dev
+=======================================================================
+
+Important Permission Required
+Our Terraform account must have:
+
+roles/resourcemanager.projectCreator
+roles/billing.user
+roles/iam.securityAdmin
+
+Otherwise, project creation will fail.
+
+
